@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useChatStore } from "../store/useChatStore";
 import { Image, Send, X } from "lucide-react";
 import toast from "react-hot-toast";
@@ -7,7 +7,10 @@ const MessageInput = () => {
   const [text, setText] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
-  const { sendMessage } = useChatStore();
+  const { sendMessage, selectedUser, sendTypingStatus } = useChatStore();
+  
+  const typingTimeoutRef = useRef(null);
+  const isTypingRef = useRef(false);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -28,9 +31,50 @@ const MessageInput = () => {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+ const handleTyping = (value) => {
+  if (!selectedUser) return;
+
+  if (value.length > 0) {
+    // Always send "isTyping: true" again to reset the backend's timeout
+    sendTypingStatus(selectedUser._id, true);
+
+    // Reset frontend timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    // Set new timeout to send "stopped typing" after 2.5 seconds of inactivity
+    typingTimeoutRef.current = setTimeout(() => {
+      sendTypingStatus(selectedUser._id, false);
+    }, 2500);
+  } else {
+    // If field is empty, stop typing immediately
+    sendTypingStatus(selectedUser._id, false);
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+  }
+};
+
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    setText(value);
+    handleTyping(value);
+  };
+
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!text.trim() && !imagePreview) return;
+
+    if (isTypingRef.current) {
+      isTypingRef.current = false;
+      sendTypingStatus(selectedUser._id, false);
+    }
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
 
     try {
       await sendMessage({
@@ -46,6 +90,17 @@ const MessageInput = () => {
       console.error("Failed to send message:", error);
     }
   };
+
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      if (isTypingRef.current && selectedUser) {
+        sendTypingStatus(selectedUser._id, false);
+      }
+    };
+  }, [selectedUser]);
 
   return (
     <div className="p-4 w-full">
@@ -76,7 +131,7 @@ const MessageInput = () => {
             className="w-full input input-bordered rounded-lg input-sm sm:input-md"
             placeholder="Type a message..."
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={handleInputChange}
           />
           <input
             type="file"
