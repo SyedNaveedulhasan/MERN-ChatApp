@@ -26,8 +26,7 @@ app.use(cors({
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 
-
-const PORT = 5001;
+const PORT = process.env.PORT || 5001;
 
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "../frontend/dist")));
@@ -41,4 +40,3 @@ server.listen(PORT, () => {
     console.log(`server is running on port ${PORT}`);
     connectDb();
 });
-
