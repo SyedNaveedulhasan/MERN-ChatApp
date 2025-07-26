@@ -6,8 +6,7 @@ import { getMessage } from "../controllers/message.controller.js";
 const router = express.Router();
 
 router.get("/users", protectRoute, getUsersForSidebar);
-router.get("/:id", protectRoute, getMessage);
-
+router.get("/chat/:id", protectRoute, getMessage);
 router.post("/send/:id", protectRoute, sendMessage);
 
 
