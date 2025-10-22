@@ -19,6 +19,6 @@
   "homepage": "https://github.com/SyedNaveedulhasan/MERN-ChatApp#readme",
   "description": "",
   "engines": {
-    "node": "18.x"
+    "node": "20.x"
   }
 }
