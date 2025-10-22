@@ -17,5 +17,8 @@
     "url": "https://github.com/SyedNaveedulhasan/MERN-ChatApp/issues"
   },
   "homepage": "https://github.com/SyedNaveedulhasan/MERN-ChatApp#readme",
-  "description": ""
+  "description": "",
+  "engines": {
+    "node": "18.x"
+  }
 }
